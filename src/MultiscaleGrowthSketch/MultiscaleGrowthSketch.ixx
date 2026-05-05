@@ -13,6 +13,7 @@ import lxlib.ConfigManager3;
 import lxlib.SketchBase;
 import lxlib.shade;
 import lxlib.TextureRef;
+import lxlib.gpuBlur;
 import ThisSketch_ImageProcessingHelpers;
 import gpuBlurClaude;
 
@@ -208,7 +209,7 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 			stateTex = lx::op(stateTex) + thisLevelTexContrastized;
 		}
 		stateTex = lx::op(stateTex) / float(pyramid.size());
-		//stateTex = (op(stateTex) + op(gpuBlur::run(stateTex, 3))*2.0f) / 2;
+		stateTex = (lx::op(stateTex) + lx::op(lx::gpuBlur::run(stateTex, 3)) * 2.0f) / 2;
 		stateTex = lx::shade(stateTex, MULTILINE(
 			float val = texture().x;
 		vec3 fire = vec3(min(val * 1.5, 1.), pow(val, 2.5), pow(val, 12.));
