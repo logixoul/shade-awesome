@@ -229,7 +229,8 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 		else {
 			tex = redToLuminance(tex);
 		}
-		lx::lxDraw(tex);
+		glViewport(0, 0, windowSize.x, windowSize.y);
+		lx::lxDraw(tex, lx::Rect<float>(0, 0, 1, 1));
 	}
 };
 

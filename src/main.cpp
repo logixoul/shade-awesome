@@ -6,8 +6,8 @@
 
 import lxlib.SketchScaffold;
 
-import FftRaysSketch;
-//import MultiscaleGrowthSketch;
+//import FftRaysSketch;
+import MultiscaleGrowthSketch;
 
 int WINAPI WinMain(
 	HINSTANCE hInstance,
