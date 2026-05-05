@@ -7,7 +7,8 @@
 import lxlib.SketchScaffold;
 
 //import FftRaysSketch;
-import MultiscaleGrowthSketch;
+//import MultiscaleGrowthSketch;
+import ParticleTraces2DSketch;
 
 int WINAPI WinMain(
 	HINSTANCE hInstance,

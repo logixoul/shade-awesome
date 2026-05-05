@@ -233,6 +233,8 @@ export struct ParticleTraces2DSketch : public lx::SketchBase {
 		);
 		glViewport(0, 0, wsx, wsy);
 		glDisable(GL_BLEND);
-     lx::lxDraw(walkerTex2);
+		lx::lxDraw(walkerTex2, lx::Rect<float>(0, 0, 1, 1));
 	}
 };
+
+export using StartupSketch = ParticleTraces2DSketch;
