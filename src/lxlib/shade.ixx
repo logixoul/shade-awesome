@@ -238,10 +238,14 @@ lx::gl::TextureRef lx::shade(vector<lx::gl::TextureRef> const& texv, std::string
 	int location = 0;
 	shader->uniform("viewportSize", viewportSize);
 	location++;
- for (int i = 0; i < texv.size(); i++) {
-		shader->uniform(samplerName(i), i); texv[i]->bind(GL_TEXTURE0 + i);
-      shader->uniform("texelSize" + samplerSuffix(i), vec2(1.0f) / vec2(texv[i]->getSize()));
+	for (int i = 0; i < texv.size(); i++) {
+		shader->uniform(samplerName(i), i);
+		glActiveTexture(GL_TEXTURE0 + i);
+		texv[i]->bind();
+		//texv[i]->sendParamsToGPU();
+		shader->uniform("texelSize" + samplerSuffix(i), vec2(1.0f) / vec2(texv[i]->getSize()));
 	}
+	glActiveTexture(GL_TEXTURE0);
 	for (auto& uniform : opts._uniforms)
 	{
 		uniform.setter(shader);

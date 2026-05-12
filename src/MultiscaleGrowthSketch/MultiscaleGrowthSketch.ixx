@@ -86,7 +86,55 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
            vec2 const& gradN = lx::safeNormalized(grad);
 			vec2 const& gradNPerp = perpLeft(gradN);
 			float add = -hessianDirectionalSecondDeriv<float, lx::WrapModes::Clamp>(img, p, gradNPerp);
-			lx::splatBilinearPoint<float, lx::WrapModes::Clamp>(img2, pf - gradN * add, add * options.morphogenesisStrength);
+			img2(p) += add * options.morphogenesisStrength;
+			//lx::splatBilinearPoint<float, lx::WrapModes::Clamp>(img2, pf - gradN * add, add * options.morphogenesisStrength);
+		}
+		auto kernel = lx::getGaussianKernel(3, lx::sigmaFromKsize(3));
+		//auto blurredImg2 = ::separableConvolve<float, WrapModes::Clamp>(img2, kernel);
+		auto blurredImg2 = ThisSketch::gaussianBlur3x3<float, lx::WrapModes::Clamp>(img2);
+		img = blurredImg2;
+		img = applyVerticalGradient(img);
+
+		return img;
+	}
+	lx::Array2D<float> updateSingleScale_GPT(lx::Array2D<float> aImg)
+	{
+		auto img = aImg.clone();
+		auto tex = lx::uploadTex(img);
+		tex->setWrap(GL_CLAMP_TO_EDGE);
+		auto levelSetCurvatureTex = lx::shade(tex, R"(
+				float here = texture(tex0, texCoord).r;
+				float left = texture(tex0, texCoord - vec2(texelSize0.x, 0.0)).r;
+				float right = texture(tex0, texCoord + vec2(texelSize0.x, 0.0)).r;
+				float down = texture(tex0, texCoord - vec2(0.0, texelSize0.y)).r;
+				float up = texture(tex0, texCoord + vec2(0.0, texelSize0.y)).r;
+				float downLeft = texture(tex0, texCoord - texelSize0).r;
+				float downRight = texture(tex0, texCoord + vec2(texelSize0.x, -texelSize0.y)).r;
+				float upLeft = texture(tex0, texCoord + vec2(-texelSize0.x, texelSize0.y)).r;
+				float upRight = texture(tex0, texCoord + texelSize0).r;
+
+				float fx = (right - left) * 0.5;
+				float fy = (up - down) * 0.5;
+				float fxx = right - 2.0 * here + left;
+				float fyy = up - 2.0 * here + down;
+				float fxy = (upRight - upLeft - downRight + downLeft) * 0.25;
+
+				float gradSq = fx * fx + fy * fy;
+				if(gradSq <= 0.03) {
+					_out.r = 0.0;
+					return;
+				}
+
+				float numerator = fxx * fy * fy - 2.0 * fx * fy * fxy + fyy * fx * fx;
+				float denominator = pow(gradSq, 1.5);
+				float curvature = numerator / denominator;
+				_out.r = curvature;
+		)");
+		auto levelSetCurvature = lx::downloadTex<float>(levelSetCurvatureTex);
+		auto img2 = img.clone();
+		for (auto p : img.coords()) {
+			float curvature = levelSetCurvature(p);
+			img2(p) += -curvature * options.morphogenesisStrength;
 		}
 		auto kernel = lx::getGaussianKernel(3, lx::sigmaFromKsize(3));
 		//auto blurredImg2 = ::separableConvolve<float, WrapModes::Clamp>(img2, kernel);
@@ -139,6 +187,7 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 	void update() {
 		lx::Array2D<float> newImg;
 		if (options.multiscale)
+			//newImg = multiscaleApply(img, [this](auto arg) { return updateSingleScale(arg); });
 			newImg = multiscaleApply(img, [this](auto arg) { return updateSingleScale(arg); });
 		else
 			newImg = updateSingleScale(img);
