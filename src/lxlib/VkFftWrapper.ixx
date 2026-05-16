@@ -1,5 +1,5 @@
 export module VkFftWrapper;
-
+#if 0
 #define VKFFT_BACKEND 3 // 3 is for OpenCL
 #include <VkFFT/vkFFT.h>
 #include <vector>
@@ -82,3 +82,4 @@ int foo() {
 
     return 0;
 }
+#endif

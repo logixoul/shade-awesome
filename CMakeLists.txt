@@ -15,9 +15,9 @@ find_package(glfw3  CONFIG REQUIRED)
 find_package(glm    CONFIG REQUIRED)
 # Workaround for vcpkg's kissfft config calling cmake_minimum_required(VERSION 3.3)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
-find_package(kissfft CONFIG REQUIRED)
+find_package(kissfft CONFIG REQUIRED COMPONENTS SHARED float)
 
-find_path(VKFFT_INCLUDE_DIRS "VkFFT/vkFFT.h")
+#find_path(VKFFT_INCLUDE_DIRS "VkFFT/vkFFT.h")
 
 # ── Source lists ──────────────────────────────────────────────────────────────
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third-party/imgui)
@@ -82,7 +82,7 @@ target_sources(App
 target_include_directories(App PRIVATE
     src
     ${IMGUI_DIR}
-    ${VKFFT_INCLUDE_DIRS}
+#    ${VKFFT_INCLUDE_DIRS}
     src/third-party/include
 )
 
@@ -122,7 +122,7 @@ target_link_libraries(App PRIVATE
     OpenGL::GL
     glfw
     glm::glm
-    kissfft::kissfft-float
+    kissfft::kissfft
 )
 
 
