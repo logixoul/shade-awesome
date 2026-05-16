@@ -1,8 +1,10 @@
 module;
 #include "precompiled.h"
 
+
 export module lxlib.Array2D_imageProc;
 
+using namespace std;
 import lxlib.Array2D;
 import lxlib.stuff;
 

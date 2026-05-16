@@ -3,6 +3,11 @@ module;
 #include <numeric>
 #include <lxlib/macros.h>
 
+//#define MINIAUDIO_IMPLEMENTATION
+
+//#include <miniaudio.h>
+#include <portaudio.h>
+
 export module MultiscaleGrowthSketch;
 
 import lxlib.Array2D;
@@ -23,6 +28,31 @@ using namespace ThisSketch;
 
 lx::Array2D<float> img(256, 256);
 
+float micState = 0.0f;
+static int audioCallback(const void* inputBuffer,
+	void* outputBuffer,
+	unsigned long framesPerBuffer,
+	const PaStreamCallbackTimeInfo* timeInfo,
+	PaStreamCallbackFlags statusFlags,
+	void* userData)
+{
+	(void)outputBuffer;
+	(void)timeInfo;
+	(void)statusFlags;
+	(void)userData;
+
+	const float* samples = (const float*)inputBuffer;
+
+	if (samples != nullptr && framesPerBuffer > 0)
+	{
+		for (int i = 0; i < framesPerBuffer; i++) {
+			micState = std::max(micState, samples[i]);
+		}
+		micState *= .99f;
+	}
+
+	return paContinue;
+}
 export struct MultiscaleGrowthSketch : public lx::SketchBase {
 	struct Options {
 		float morphogenesisStrength;
@@ -52,11 +82,53 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 
 	Options options;
 	bool isPaused = false;
+
 		
 	void setup()
 	{
 		options.init();
 		reset();
+
+		setupMic();
+	}
+
+	int setupMic() {
+		PaError err;
+		PaStream* stream;
+
+		err = Pa_Initialize();
+		if (err != paNoError)
+		{
+			std::cerr << "PortAudio init failed.\n";
+			return -1;
+		}
+
+		err = Pa_OpenDefaultStream(
+			&stream,
+			1,          // input channels
+			0,          // output channels
+			paFloat32,  // sample format
+			48000,      // sample rate
+			256,        // frames per buffer
+			audioCallback,
+			nullptr
+		);
+
+		if (err != paNoError)
+		{
+			std::cerr << "Failed to open stream.\n";
+			Pa_Terminate();
+			return -2;
+		}
+
+		err = Pa_StartStream(stream);
+		if (err != paNoError)
+		{
+			std::cerr << "Failed to start stream.\n";
+			Pa_CloseStream(stream);
+			Pa_Terminate();
+			return -3;
+		}
 	}
 
 	void keyDown(int key)
@@ -246,7 +318,7 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 		auto imgClamped = img.clone();
 		for (auto p : imgClamped.coords()) imgClamped(p) = glm::clamp(imgClamped(p), 0.0f, 1.0f);
 
-		auto imgTex = lx::uploadTex(imgClamped);
+		auto imgTex = lx::uploadTex(img);
 		auto imgTexCentered = lx::shade(imgTex,
 			"float f = texture().x;"
 			"_out.r = f - .5;"
@@ -255,25 +327,41 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 		auto imgTexHighpassed = gpuHighpassNew(imgTexCentered, options.highPassStrength);
 		//imgTexHighpassed = gpuHighpass(imgTexHighpassed, options.highPassStrength);
 
-		auto result1 = lx::shade(imgTexHighpassed,
+		auto result = lx::shade(imgTexHighpassed,
 			"float f = texture().x;"
 			"float fw = fwidth(f);"
-			"f = smoothstep(-fw/2.0, fw/2.0, f) - smoothstep(.01-fw/2.0, .01+fw/2.0, f);"
-			"_out.rgb = f * vec3(1.0, 0.1, 0.05);",
-				lx::ShadeOpts()
-				.dstRectSize(ivec2(wsx, wsy))
-				.ifmt(GL_RGBA16F)
-		);	
-		auto result2 = lx::shade(imgTexHighpassed,
-			"float f = texture().x;"
-			"float fw = fwidth(f);"
-			"f = smoothstep(.01-fw/2.0, .01+fw/2.0, f);"
-			"_out.rgb = f * vec3(1.0, 0.01, 0.05).bgr;",
+			"vec3 sum = vec3(0.0);"
+
+
+			"float f1 = smoothstep(-fw/2.0, fw/2.0, f) - smoothstep(.01-fw/2.0, .01+fw/2.0, f);"
+			//"sum += f1 * rotate(vec3(1.0, 0.1, 0.2), vec3(1.0), texCoord.y*3.14*2.0);"
+			"sum += f1 * vec3(1.0, 0.1, 1.0*m*m);"
+			"_out.rgb = sum;"
+			,
 			lx::ShadeOpts()
 			.dstRectSize(ivec2(wsx, wsy))
 			.ifmt(GL_RGBA16F)
-		);
-		lx::gl::TextureRef result = op(result1) + result2;
+			.uniform("m", m)
+			.functions(R"(
+				mat4 rotationMatrix(vec3 axis, float angle) {
+					axis = normalize(axis);
+					float s = sin(angle);
+					float c = cos(angle);
+					float oc = 1.0 - c;
+    
+					return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+								oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+								oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+								0.0,                                0.0,                                0.0,                                1.0);
+				}
+
+				vec3 rotate(vec3 v, vec3 axis, float angle) {
+					mat4 m = rotationMatrix(axis, angle);
+					return (m * vec4(v, 1.0)).xyz;
+				}
+				)")
+		);	
+		
 		auto resultB = gpuBlurClaude::blurWithInvKernel(result);
 		result = op(result) + op(resultB) * 3.0;
 
@@ -329,10 +417,15 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 			lx::ShadeOpts().ifmt(GL_RGBA16F));
 		return stateTex;
 	}
+	float m;
 	void draw()
 	{
 		lx::lxClear();
 		options.update();
+		m = micState * 4;
+		m = std::max(0.0, 1.0 - m*m);
+		cout << m << endl;
+		options.blendWeaken = m;
 
         lx::gl::TextureRef tex = lx::uploadTex(img);
 		if (options.binarizePostprocessing) {

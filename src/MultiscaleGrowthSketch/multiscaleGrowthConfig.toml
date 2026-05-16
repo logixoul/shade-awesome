@@ -1,6 +1,6 @@
 [param.morphogenesisStrength]
 type = "float"
-default = 0.658
+default = 2.3
 min = 0.0068
 max = 20.0
 speed = 0.02

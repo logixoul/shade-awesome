@@ -13,6 +13,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 find_package(OpenGL REQUIRED)
 find_package(glfw3  CONFIG REQUIRED)
 find_package(glm    CONFIG REQUIRED)
+find_package(portaudio    CONFIG REQUIRED)
 # Workaround for vcpkg's kissfft config calling cmake_minimum_required(VERSION 3.3)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 find_package(kissfft CONFIG REQUIRED)
@@ -71,7 +72,7 @@ add_executable(App WIN32
     src/lxlib/simplexnoise.cpp
     ${IMGUI_SOURCES}
     ${THIRD_PARTY_SOURCES}
-)
+  "src/lxlib/miniaudio.cpp")
 
 # C++20 named module units
 target_sources(App
@@ -123,6 +124,7 @@ target_link_libraries(App PRIVATE
     glfw
     glm::glm
     kissfft::kissfft-float
+    portaudio
 )
 
 

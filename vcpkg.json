@@ -1,8 +1,10 @@
 {
-    "dependencies": [
-        "glfw3",
-        "glm",
-        "vkfft",
-        "kissfft"
-    ]
+  "dependencies": [
+    "glfw3",
+    "glm",
+    "vkfft",
+    "kissfft",
+    "miniaudio",
+    "portaudio"
+  ]
 }

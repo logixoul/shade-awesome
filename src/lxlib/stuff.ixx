@@ -1,5 +1,6 @@
 module;
 #include "precompiled.h"
+using namespace std;
 
 export module lxlib.stuff;
 

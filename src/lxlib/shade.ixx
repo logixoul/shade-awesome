@@ -3,6 +3,7 @@ module;
 
 export module lxlib.shade;
 
+using namespace std;
 import lxlib.GlslProg;
 import lxlib.TextureRef;
 import lxlib.Array2D;
