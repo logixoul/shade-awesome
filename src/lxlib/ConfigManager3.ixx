@@ -25,7 +25,7 @@ public:
 	void init() // to avoid static initialization order fiasco. Call this at the start of setup() in Sketch.
 	{
 		ImGuiIO& io = ImGui::GetIO();
-		io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
+		//io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
 	}
 	bool getBool(std::string const& name)
 	{

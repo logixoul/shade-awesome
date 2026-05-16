@@ -35,7 +35,7 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 		float highPassStrength;
 		lx::ConfigManager3 cfg;
 
-		Options() : cfg("MultiscaleGrowthConfig.toml") {}
+		Options() : cfg("multiscaleGrowthConfig.toml") {}
 
 		void init() {
 			cfg.init();
