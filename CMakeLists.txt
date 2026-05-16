@@ -6,8 +6,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Use static MSVC runtime (/MT or /MTd) to match the vcpkg triplet
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+if(MSVC)
+    # Use static MSVC runtime (/MT or /MTd) to match the vcpkg triplet
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
 
 # ── Packages ──────────────────────────────────────────────────────────────────
 find_package(OpenGL REQUIRED)
@@ -66,12 +68,16 @@ set(CXX_MODULE_SOURCES
 )
 
 # ── Target ────────────────────────────────────────────────────────────────────
-add_executable(App WIN32
+add_executable(App
     src/main.cpp
     src/lxlib/simplexnoise.cpp
     ${IMGUI_SOURCES}
     ${THIRD_PARTY_SOURCES}
 )
+
+if(WIN32)
+    set_target_properties(App PROPERTIES WIN32_EXECUTABLE ON)
+endif()
 
 # C++20 named module units
 target_sources(App
@@ -86,10 +92,11 @@ target_include_directories(App PRIVATE
     src/third-party/include
 )
 
-# Precompiled header – shared by .cpp and .ixx sources.
-# With VS 2022 17.5+ / VS 2026, /FI works with named modules:
-# the force-included PCH content is placed in the global module fragment.
-target_precompile_headers(App PRIVATE src/precompiled.h)
+# Precompiled headers interact badly with GCC's current named-modules flow,
+# so keep them on MSVC where this setup is known to work.
+if(MSVC)
+    target_precompile_headers(App PRIVATE src/precompiled.h)
+endif()
 
 # Third-party sources don't use our PCH.
 set_source_files_properties(
@@ -100,23 +107,25 @@ set_source_files_properties(
 )
 
 target_compile_definitions(App PRIVATE
-    WIN32
-    _WINDOWS
+    $<$<PLATFORM_ID:Windows>:WIN32>
+    $<$<PLATFORM_ID:Windows>:_WINDOWS>
     $<$<CONFIG:Debug>:_DEBUG>
     $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:NDEBUG>
 )
 
-target_compile_options(App PRIVATE
-    /W0
-    /Zm200
-    $<$<CONFIG:Release>:/O2 /fp:fast /arch:SSE2 /openmp /GS- /Zi>
-    $<$<CONFIG:RelWithDebInfo>:/O2 /fp:fast /arch:SSE2 /openmp /GS- /Zi>
-    $<$<CONFIG:Debug>:/RTC1 /Od>
-)
+if(MSVC)
+    target_compile_options(App PRIVATE
+        /W0
+        /Zm200
+        $<$<CONFIG:Release>:/O2 /fp:fast /arch:SSE2 /openmp /GS- /Zi>
+        $<$<CONFIG:RelWithDebInfo>:/O2 /fp:fast /arch:SSE2 /openmp /GS- /Zi>
+        $<$<CONFIG:Debug>:/RTC1 /Od>
+    )
 
-target_link_options(App PRIVATE
-    /DEBUG
-)
+    target_link_options(App PRIVATE
+        /DEBUG
+    )
+endif()
 
 target_link_libraries(App PRIVATE
     OpenGL::GL

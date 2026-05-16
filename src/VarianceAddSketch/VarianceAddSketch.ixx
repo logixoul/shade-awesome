@@ -21,11 +21,11 @@ int sx = wsx / ::scale;
 int sy = wsy / ::scale;
 
 
-bool pause;
-const double M_PI = 3.14159265359;
+bool paused = false;
+const double kPi = 3.14159265359;
 vec3 complexToColor_HSV(vec2 comp) {
-	float hue = (float)M_PI + (float)atan2(comp.y, comp.x);
-	hue /= (float)(2 * M_PI);
+	float hue = (float)kPi + (float)atan2(comp.y, comp.x);
+	hue /= (float)(2 * kPi);
 	float lightness = length(comp);
 	lightness = .5f;
 	//lightness /= lightness + 1.0f;
@@ -51,7 +51,7 @@ export struct VarianceAddSketch : public lx::SketchBase {
 	{
 		if (key == 'p')
 		{
-			pause = !pause;
+			paused = !paused;
 		}
 		if (key == 'r')
 		{
@@ -60,7 +60,7 @@ export struct VarianceAddSketch : public lx::SketchBase {
 	}
 
 	void update() {
-		if (pause)
+		if (paused)
 			return;
 
 		auto variance = get_variance(state);

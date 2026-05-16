@@ -15,11 +15,11 @@ import lxlib.GlslProg;
 import lxlib.KissFFTWrapper;
 import lxlib.ConfigManager3;
 
-using FFT = lx::KissFFTWrapper<float>;
-
 export module FftRaysSketch;
 
-bool pause;
+using FFT = lx::KissFFTWrapper<float>;
+
+bool paused = false;
 export struct FftRaysSketch : public lx::SketchBase {
 	struct Options {
 		float gain;
@@ -90,7 +90,7 @@ export struct FftRaysSketch : public lx::SketchBase {
 	{
 		if (key == 'p')
 		{
-			pause = !pause;
+			paused = !paused;
 		}
 		if (key == 'r')
 		{
@@ -102,7 +102,7 @@ export struct FftRaysSketch : public lx::SketchBase {
 	void update() {
 		options.update();
 
-		if (pause)
+		if (paused)
 			return;
 		elapsedFrames++;
 		if(elapsedFrames % NUM_FRAMES_BETWEEN_REGENERATIONS == 0) {

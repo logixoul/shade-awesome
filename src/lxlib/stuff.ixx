@@ -1,6 +1,12 @@
 module;
 #include "precompiled.h"
 
+#if defined(_WIN32)
+#include <float.h>
+#elif defined(__SSE__)
+#include <xmmintrin.h>
+#endif
+
 export module lxlib.stuff;
 
 //import lxlib.shade;
@@ -244,7 +250,11 @@ void lx::disableGLReadClamp() {
 }
 
 void lx::enableDenormalFlushToZero() {
+#if defined(_WIN32)
 	_controlfp(_DN_FLUSH, _MCW_DN);
+#elif defined(__SSE__)
+	_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+#endif
 }
 
 unsigned int lx::ilog2(unsigned int val) {

@@ -1,10 +1,10 @@
 module;
 
+#include <complex>
+#include <kissfft/kiss_fftnd.h>
 #include <vector>
 
 export module lxlib.KissFFTWrapper;
-#include <kissfft/kiss_fftnd.h>
-#include <complex>
 
 import lxlib.Array2D;
 

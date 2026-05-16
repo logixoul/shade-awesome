@@ -14,13 +14,14 @@ static void glfw_error_callback(int error, const char* description)
 {
 	fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
-namespace lx { class SketchScaffold; }
 
-lx::SketchScaffold* instance;
+export namespace lx { class SketchScaffold; }
 
-void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos);
-void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+static lx::SketchScaffold* instance = nullptr;
+
+static void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos);
+static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 export namespace lx {
 	class SketchScaffold {

@@ -23,11 +23,11 @@ int sy = wsy / ::scale;
 float noiseTimeDim = 0.0f;
 const int MAX_AGE = 100;
 
-bool pause;
-const double M_PI = 3.14159265359;
+bool paused = false;
+const double kPi = 3.14159265359;
 vec3 complexToColor_HSV(vec2 comp) {
-	float hue = (float)M_PI + (float)atan2(comp.y, comp.x);
-	hue /= (float)(2 * M_PI);
+	float hue = (float)kPi + (float)atan2(comp.y, comp.x);
+	hue /= (float)(2 * kPi);
 	float lightness = length(comp);
 	lightness = .5f;
 	//lightness /= lightness + 1.0f;
@@ -123,7 +123,7 @@ export struct ParticleTraces2DSketch : public lx::SketchBase {
 	{
 		if (key == 'p')
 		{
-			pause = !pause;
+			paused = !paused;
 		}
 	}
 	float noiseProgressSpeed;
@@ -131,7 +131,7 @@ export struct ParticleTraces2DSketch : public lx::SketchBase {
 	void update() {
 		noiseProgressSpeed = .00008f;
 
-		if (!pause) {
+		if (!paused) {
 			noiseTimeDim += noiseProgressSpeed;
 
 			for(Walker & walker : walkers) {
@@ -176,7 +176,7 @@ export struct ParticleTraces2DSketch : public lx::SketchBase {
 		static lx::Array2D<vec3> sizeSource(sx, sy);
       static auto sizeSourceTex = lx::uploadTex(sizeSource);
       static auto walkerTex = lx::shade(sizeSourceTex, "_out.rgb = vec3(0.0);");
-		if (!pause) {
+		if (!paused) {
           walkerTex = lx::shade(walkerTex, "_out.rgb = texture().xyz * 0.993;");
 
 			glPointSize(2.5);

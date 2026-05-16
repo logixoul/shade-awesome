@@ -1,6 +1,10 @@
 #pragma once
 
 #include <cmath>
+#include <cassert>
+#include <algorithm>
+#include <complex>
+#include <memory>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -10,6 +14,7 @@
 #include <fstream>
 #include <map>
 #include <numeric>
+#include <type_traits>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 // glm doesn't compile unless I I define the following...

@@ -116,11 +116,11 @@ void lx::drawRect() {
   lx::VAO::unbind();
 }
 
-auto samplerSuffix = [&](int i) -> string {
+auto samplerSuffix = [](int i) -> string {
    return std::to_string(i);
 };
 
-auto samplerName = [&](int i) -> string {
+auto samplerName = [](int i) -> string {
 	return "tex" + samplerSuffix(i);
 };
 

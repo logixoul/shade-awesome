@@ -10,6 +10,7 @@ import lxlib.stuff;
 import lxlib.Array2D_imageProc;
 import lxlib.gpgpu;
 import lxlib.ConfigManager3;
+import lxlib.Rect;
 import lxlib.SketchBase;
 import lxlib.shade;
 import lxlib.TextureRef;
