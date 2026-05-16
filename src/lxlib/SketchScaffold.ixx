@@ -37,7 +37,7 @@ public:
 
 	void setup()
 	{
-		sketch->windowSize = ivec2(768, 768);
+		sketch->windowSize = ivec2(850, 850);
 		::instance = this;
 
 		glfwSetErrorCallback(glfw_error_callback);

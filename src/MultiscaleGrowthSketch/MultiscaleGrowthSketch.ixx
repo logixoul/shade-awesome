@@ -231,6 +231,68 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 			);
 		return highpassed;
 	}
+	static lx::gl::TextureRef gpuHighpassNew(lx::gl::TextureRef in, float strength) {
+		auto blurred = lx::gpuBlur::run(in, 2);
+		auto highpassed = lx::shade({ in, blurred }, MULTILINE(
+			float f = texture().x;
+		float fBlurred = texture(tex1).x;
+		float highPassed = f - fBlurred * highPassStrength;
+		_out.r = highPassed;
+			), lx::ShadeOpts().uniform("highPassStrength", strength)
+			);
+		return highpassed;
+	}
+	lx::gl::TextureRef postprocessNew() {
+		auto imgClamped = img.clone();
+		for (auto p : imgClamped.coords()) imgClamped(p) = glm::clamp(imgClamped(p), 0.0f, 1.0f);
+
+		auto imgTex = lx::uploadTex(imgClamped);
+		auto imgTexCentered = lx::shade(imgTex,
+			"float f = texture().x;"
+			"_out.r = f - .5;"
+		);
+
+		auto imgTexHighpassed = gpuHighpassNew(imgTexCentered, options.highPassStrength);
+		//imgTexHighpassed = gpuHighpass(imgTexHighpassed, options.highPassStrength);
+
+		auto result1 = lx::shade(imgTexHighpassed,
+			"float f = texture().x;"
+			"float fw = fwidth(f);"
+			"f = smoothstep(-fw/2.0, fw/2.0, f) - smoothstep(.01-fw/2.0, .01+fw/2.0, f);"
+			"_out.rgb = f * vec3(1.0, 0.1, 0.05);",
+				lx::ShadeOpts()
+				.dstRectSize(ivec2(wsx, wsy))
+				.ifmt(GL_RGBA16F)
+		);	
+		auto result2 = lx::shade(imgTexHighpassed,
+			"float f = texture().x;"
+			"float fw = fwidth(f);"
+			"f = smoothstep(.01-fw/2.0, .01+fw/2.0, f);"
+			"_out.rgb = f * vec3(1.0, 0.01, 0.05).bgr;",
+			lx::ShadeOpts()
+			.dstRectSize(ivec2(wsx, wsy))
+			.ifmt(GL_RGBA16F)
+		);
+		lx::gl::TextureRef result = op(result1) + result2;
+		auto resultB = gpuBlurClaude::blurWithInvKernel(result);
+		result = op(result) + op(resultB) * 3.0;
+
+		result = lx::shade({ result, imgTex }, R"(
+			vec3 bloomedHiPass = texture(tex0).rgb;
+			vec3 original = vec3(texture(tex1).r);
+			vec3 sum = bloomedHiPass * 4.0;
+			//float L =  dot(vec3(.3333), sum);
+			//float Lnew = L / (L + 1.0);
+			//sum *= Lnew / L;
+			sum /= sum + vec3(1.0);
+			_out.rgb = sum;
+
+
+			//_out.rgb = mix(original, vec3(1.0), bloomedHiPass);
+		)");
+
+		return result;
+	}
 	lx::gl::TextureRef postprocess() {
 		auto imgClamped = img.clone();
         for(auto p : imgClamped.coords()) imgClamped(p) = glm::clamp(imgClamped(p), 0.0f, 1.0f);
@@ -274,7 +336,7 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 
         lx::gl::TextureRef tex = lx::uploadTex(img);
 		if (options.binarizePostprocessing) {
-			tex = postprocess();
+			tex = postprocessNew();
 		}
 		else {
 			tex = redToLuminance(tex);
