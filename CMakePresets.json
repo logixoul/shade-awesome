@@ -1,43 +1,43 @@
 {
-    "version": 3,
-    "configurePresets": [
-        {
-            "name": "default",
-            "displayName": "Ninja Multi-Config (x64-windows)",
-            "description": "Configure with vcpkg toolchain using Ninja Multi-Config generator",
-            "generator": "Ninja Multi-Config",
-            "binaryDir": "${sourceDir}/build",
-            "architecture": {
-                "value": "x64",
-                "strategy": "external"
-            },
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": {
-                    "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                    "type": "FILEPATH"
-                },
-                "VCPKG_TARGET_TRIPLET": "x64-windows"
-            }
-        }
-    ],
-    "buildPresets": [
-        {
-            "name": "debug",
-            "displayName": "Debug",
-            "configurePreset": "default",
-            "configuration": "Debug"
-        },
-        {
-            "name": "release",
-            "displayName": "Release",
-            "configurePreset": "default",
-            "configuration": "Release"
-        },
-        {
-            "name": "relwithdebinfo",
-            "displayName": "RelWithDebInfo",
-            "configurePreset": "default",
-            "configuration": "RelWithDebInfo"
-        }
-    ]
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "binaryDir": "${sourceDir}/build/${presetName}"
+    },
+    {
+      "name": "windows",
+      "inherits": "base",
+      "displayName": "Windows MSVC",
+      "generator": "Visual Studio 17 2022",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    },
+    {
+      "name": "linux",
+      "inherits": "base",
+      "displayName": "Linux Ninja",
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux"
+      }
+    },
+    {
+      "name": "mac",
+      "inherits": "base",
+      "displayName": "macOS Ninja",
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "arm64-osx"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows-release", "configurePreset": "windows", "configuration": "Release" },
+    { "name": "linux-release",   "configurePreset": "linux",   "configuration": "Release" },
+    { "name": "mac-release",     "configurePreset": "mac",     "configuration": "Release" }
+  ]
 }

@@ -1,5 +1,6 @@
 module;
 #include "precompiled.h"
+using namespace std;
 
 #if defined(_WIN32)
 #include <float.h>

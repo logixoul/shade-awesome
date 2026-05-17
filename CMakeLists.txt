@@ -1,5 +1,19 @@
 cmake_minimum_required(VERSION 3.28)
 
+set(VCPKG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg")
+if(NOT EXISTS "${VCPKG_ROOT}/vcpkg" AND NOT EXISTS "${VCPKG_ROOT}/vcpkg.exe")
+    message(STATUS "Bootstrapping vcpkg...")
+    if(WIN32)
+        execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat" -disableMetrics
+                        WORKING_DIRECTORY "${VCPKG_ROOT}")
+    else()
+        execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.sh" -disableMetrics
+                        WORKING_DIRECTORY "${VCPKG_ROOT}")
+    endif()
+endif()
+
+set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+
 project(FluidSims LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -15,9 +29,10 @@ endif()
 find_package(OpenGL REQUIRED)
 find_package(glfw3  CONFIG REQUIRED)
 find_package(glm    CONFIG REQUIRED)
+find_package(portaudio    CONFIG REQUIRED)
 # Workaround for vcpkg's kissfft config calling cmake_minimum_required(VERSION 3.3)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
-find_package(kissfft CONFIG REQUIRED COMPONENTS SHARED float)
+find_package(kissfft CONFIG REQUIRED COMPONENTS float)
 
 #find_path(VKFFT_INCLUDE_DIRS "VkFFT/vkFFT.h")
 
@@ -72,8 +87,7 @@ add_executable(App
     src/main.cpp
     src/lxlib/simplexnoise.cpp
     ${IMGUI_SOURCES}
-    ${THIRD_PARTY_SOURCES}
-)
+    ${THIRD_PARTY_SOURCES})
 
 if(WIN32)
     set_target_properties(App PROPERTIES WIN32_EXECUTABLE ON)
@@ -131,7 +145,8 @@ target_link_libraries(App PRIVATE
     OpenGL::GL
     glfw
     glm::glm
-    kissfft::kissfft
+    kissfft::kissfft-float
+    portaudio
 )
 
 

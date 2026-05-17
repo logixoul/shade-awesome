@@ -1,10 +1,13 @@
 module;
 #include "precompiled.h"
 
+
 export module lxlib.Array2D_imageProc;
 
 import lxlib.Array2D;
 import lxlib.stuff;
+
+using namespace std;
 
 export namespace lx {
 	namespace WrapModes {

@@ -1,3 +1,6 @@
+Clone via:
+* git clone --recurse-submodules https://github.com/logixoul/shade-awesome
+
 Steps to build on Windows:
 * winget install -e --id Ninja-build.Ninja
 * install vcpkg and set the VCPKG_ROOT environment variable to the vcpkg directory
@@ -5,6 +8,7 @@ Steps to build on Windows:
 
 Steps to build on Ubuntu:
 * sudo apt update
-* sudo apt install -y build-essential libglvnd-dev libgl1-mesa-dev mesa-common-dev pkgconf libglfw3 libglfw3-dev libglm-dev libkissfft-dev
-* cmake . -B build -G "Ninja Multi-Config"
-* cmake --build build --config Release
+* sudo apt install curl zip unzip tar pkg-config build-essential ninja-build git # for vcpkg
+* sudo apt install libgl1-mesa-dev xorg-dev libglu1-mesa-dev xorg-dev libxinerama-dev libxcursor-dev # for opengl and glfw
+* cmake --preset=linux
+* cmake --build --preset=linux-release

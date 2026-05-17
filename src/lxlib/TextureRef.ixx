@@ -69,6 +69,13 @@ export namespace lx {
 			bind();
 			glActiveTexture(GL_TEXTURE0); // todo: is this necessary?
 		}
+		void sendParamsToGPU() {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mFormat.mMinFilter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mFormat.mMagFilter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mFormat.mWrapS);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mFormat.mWrapT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, mFormat.mWrapR);
+		}
 		GLint getId() {
 			return mId;
 		}
@@ -99,6 +106,9 @@ export namespace lx {
 		void setWrap(GLenum wrapS, GLenum wrapT) {
 			mFormat.mWrapS = wrapS;
 			mFormat.mWrapT = wrapT;
+		}
+		Format const& format() const {
+			return mFormat;
 		}
 		GLenum getTarget() const {
 			return GL_TEXTURE_2D;
@@ -157,7 +167,7 @@ export namespace lx {
 	void lxDraw(lx::TextureRef const& tex, lx::Rect<float> const& destRect) {
 		glActiveTexture(GL_TEXTURE0);
 		tex->bind();
-
+		tex->sendParamsToGPU();
 		static const auto glsl = std::make_shared<lx::GlslProg>(lx::genericFragmentShaderSource, lx::genericVertexShaderSource);
 		glsl->bind();
 		glsl->uniform("uTex", 0);
