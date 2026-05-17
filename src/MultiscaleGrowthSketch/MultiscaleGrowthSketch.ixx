@@ -325,8 +325,7 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 		);
 
 		auto imgTexHighpassed = gpuHighpassNew(imgTexCentered, options.highPassStrength);
-		//imgTexHighpassed = gpuHighpass(imgTexHighpassed, options.highPassStrength);
-
+		
 		auto result = lx::shade(imgTexHighpassed,
 			"float f = texture().x;"
 			"float fw = fwidth(f);"
@@ -334,7 +333,6 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 
 
 			"float f1 = smoothstep(-fw/2.0, fw/2.0, f) - smoothstep(.01-fw/2.0, .01+fw/2.0, f);"
-			//"sum += f1 * rotate(vec3(1.0, 0.1, 0.2), vec3(1.0), texCoord.y*3.14*2.0);"
 			"sum += f1 * vec3(1.0, 0.1, 1.0*m*m);"
 			"_out.rgb = sum;"
 			,
@@ -342,24 +340,6 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 			.dstRectSize(ivec2(wsx, wsy))
 			.ifmt(GL_RGBA16F)
 			.uniform("m", m)
-			.functions(R"(
-				mat4 rotationMatrix(vec3 axis, float angle) {
-					axis = normalize(axis);
-					float s = sin(angle);
-					float c = cos(angle);
-					float oc = 1.0 - c;
-    
-					return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-								oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-								oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-								0.0,                                0.0,                                0.0,                                1.0);
-				}
-
-				vec3 rotate(vec3 v, vec3 axis, float angle) {
-					mat4 m = rotationMatrix(axis, angle);
-					return (m * vec4(v, 1.0)).xyz;
-				}
-				)")
 		);	
 		
 		auto resultB = gpuBlurClaude::blurWithInvKernel(result);
@@ -369,54 +349,13 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 			vec3 bloomedHiPass = texture(tex0).rgb;
 			vec3 original = vec3(texture(tex1).r);
 			vec3 sum = bloomedHiPass * 4.0;
-			//float L =  dot(vec3(.3333), sum);
-			//float Lnew = L / (L + 1.0);
-			//sum *= Lnew / L;
 			sum /= sum + vec3(1.0);
 			_out.rgb = sum;
-
-
-			//_out.rgb = mix(original, vec3(1.0), bloomedHiPass);
 		)");
 
 		return result;
 	}
-	lx::gl::TextureRef postprocess() {
-		auto imgClamped = img.clone();
-        for(auto p : imgClamped.coords()) imgClamped(p) = glm::clamp(imgClamped(p), 0.0f, 1.0f);
-
-        auto imgTex = lx::uploadTex(imgClamped);
-		auto imgTexCentered = lx::shade(imgTex,
-			"float f = texture().x;"
-			"_out.r = f - .5;"
-		);
-
-		auto imgTexHighpassed = gpuHighpass(imgTexCentered, options.highPassStrength);
-		imgTexHighpassed = gpuHighpass(imgTexHighpassed, options.highPassStrength);
-      auto imgHighpassed = lx::downloadTex<float>(imgTexHighpassed);
-
-		auto pyramid = buildGaussianPyramid(imgHighpassed);
-		auto stateTex = lx::shade(imgTex, "_out = vec4(0.0);", lx::ShadeOpts().dstRectSize(windowSize));
-		for (int i = pyramid.size() - 1; i >= 0; i--) {
-			auto& thisLevel = pyramid[i];
-           auto thisLevelTex = lx::uploadTex(thisLevel);
-			auto thisLevelTexContrastized = lx::shade(thisLevelTex,
-				"float f = texture().x;"
-				"float fw = fwidth(f);"
-				"f = smoothstep(-fw/2.0, fw/2.0, f);"
-				"_out.r = f;", lx::ShadeOpts().dstRectSize(ivec2(wsx, wsy)));
-			stateTex = lx::op(stateTex) + thisLevelTexContrastized;
-		}
-		stateTex = lx::op(stateTex) / float(pyramid.size());
-		stateTex = (lx::op(stateTex) + lx::op(lx::gpuBlur::run(stateTex, 3)) * 2.0f) / 2;
-		stateTex = lx::shade(stateTex, MULTILINE(
-			float val = texture().x;
-		vec3 fire = vec3(min(val * 1.5, 1.), pow(val, 2.5), pow(val, 12.));
-		_out.rgb = fire;
-			),
-			lx::ShadeOpts().ifmt(GL_RGBA16F));
-		return stateTex;
-	}
+	
 	float m;
 	void draw()
 	{
