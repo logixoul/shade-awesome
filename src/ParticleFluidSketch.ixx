@@ -100,7 +100,7 @@ export struct ParticleFluidSketch : public lx::SketchBase {
 		//auto tex2 = gpuBlur::run(tex, blurSize);
 		auto tex2 = tex;
       tex2 = lx::shade(tex2,
-			"float f = texture().x;"
+			"float f = lxTexture().x;"
 			"float fw = fwidth(f);"
 			"f = smoothstep(renderThreshold-fw/2, renderThreshold+fw/2, f);"
 			//"f = dFdx(f)+dFdy(f);"

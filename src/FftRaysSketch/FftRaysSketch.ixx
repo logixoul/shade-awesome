@@ -123,7 +123,7 @@ export struct FftRaysSketch : public lx::SketchBase {
 
  lx::gl::TextureRef darken(lx::gl::TextureRef tex) {
 		return lx::shade(tex,
-			"vec2 c = texture().xy;"
+			"vec2 c = lxTexture().xy;"
 			"float len = length(c);"
 			"float newLen = pow(len, 3.0);"
 			"_out.xy = c * (newLen / len);");
@@ -140,8 +140,8 @@ export struct FftRaysSketch : public lx::SketchBase {
 		const float normalizedStateAge = (float)(elapsedFrames % NUM_FRAMES_BETWEEN_REGENERATIONS) / (float)NUM_FRAMES_BETWEEN_REGENERATIONS;
 		const float interpolationCoef = 1.0f - std::pow(1.0f - normalizedStateAge, 2.0f); // ease out curve
         auto tex = lx::shade({ spatialDomainTex, spatialDomainTexNext },
-			"vec2 state = texture(tex0).rg;"
-			"vec2 stateNext = texture(tex1).rg;"
+			"vec2 state = lxTexture(tex0).rg;"
+			"vec2 stateNext = lxTexture(tex1).rg;"
 			"vec2 mixed = mix(state, stateNext, interpolationCoef);"
 
 			"_out.rgb = complexToColor_HSV(mixed);",
@@ -162,7 +162,7 @@ export struct FftRaysSketch : public lx::SketchBase {
 			)")
 		);
      tex = lx::shade(tex, // upscale
-			"_out = texture();"
+			"_out = lxTexture();"
            , lx::ShadeOpts().dstRectSize(vec2(windowSize)));
 
         tex = lx::shade(tex,
@@ -186,9 +186,9 @@ export struct FftRaysSketch : public lx::SketchBase {
 
        auto texb = lx::gpuBlur::run(tex, 5);
 		tex = lx::op(tex) + lx::op(texb);
-		//tex = shade(tex, "_out.rgb = texture().rgb * .1;");
+		//tex = shade(tex, "_out.rgb = lxTexture().rgb * .1;");
         tex = lx::shade(tex,
-			"_out.rgb = texture().rgb*gain;"
+			"_out.rgb = lxTexture().rgb*gain;"
 			//"_out.rgb = reinhardTonemapLuma(_out.rgb);"
 			//"_out.rgb = uncharted2Tonemap(_out.rgb);" // filmic tonemapping
 			//"_out.rgb = clipChroma(_out.rgb);" // chroma clipping to prevent colors from going out of gamut after tonemapping

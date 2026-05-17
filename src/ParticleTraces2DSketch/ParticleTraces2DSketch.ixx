@@ -177,7 +177,7 @@ export struct ParticleTraces2DSketch : public lx::SketchBase {
       static auto sizeSourceTex = lx::uploadTex(sizeSource);
       static auto walkerTex = lx::shade(sizeSourceTex, "_out.rgb = vec3(0.0);");
 		if (!paused) {
-          walkerTex = lx::shade(walkerTex, "_out.rgb = texture().xyz * 0.993;");
+		walkerTex = lx::shade(walkerTex, "_out.rgb = lxTexture().xyz * 0.993;");
 
 			glPointSize(2.5);
 			std::vector<vec4> color;
@@ -211,7 +211,7 @@ export struct ParticleTraces2DSketch : public lx::SketchBase {
 			}
 		}
       auto walkerTexThres = lx::shade(walkerTex,
-			"vec3 c = texture().xyz;"
+			"vec3 c = lxTexture().xyz;"
 			"float avg = dot(c, vec3(1)/3.0f);"
 			"if(avg < .25)"
 			"	 c = vec3(0);"
@@ -219,13 +219,13 @@ export struct ParticleTraces2DSketch : public lx::SketchBase {
 		);
       auto walkerTexB = lx::gpuBlur::run(walkerTexThres, 4);
 		auto walkerTex2 = lx::shade({ walkerTex, walkerTexB },
-			"vec3 c = texture().xyz;"
+			"vec3 c = lxTexture().xyz;"
 			"vec3 hsl = rgb2hsl(c);"
 			"hsl.z /= .5;"
 			"hsl.z = min(hsl.z, 1.0);"
 			"hsl.z = pow(hsl.z, 3.0);"
 			"c = hsl2rgb(hsl);"
-           "c += texture(tex1).xyz;"
+		   "c += lxTexture(tex1).xyz;"
 			"_out.rgb = c;",
          lx::ShadeOpts()
 				.ifmt(GL_RGB32F)

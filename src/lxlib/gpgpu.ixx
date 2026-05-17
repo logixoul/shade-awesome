@@ -21,16 +21,16 @@ export namespace lx {
 		lx::Operable operator*(lx::gl::TextureRef other);
 		lx::Operable operator/(lx::gl::TextureRef other);
 		lx::Operable operator+(float scalar) {
-			return lx::Operable(lx::shade(tex, "_out = texture() + scalar;", lx::ShadeOpts().uniform("scalar", scalar)));
+			return lx::Operable(lx::shade(tex, "_out = lxTexture() + scalar;", lx::ShadeOpts().uniform("scalar", scalar)));
 		}
 		lx::Operable operator-(float scalar) {
-			return lx::Operable(lx::shade(tex, "_out = texture() - scalar;", lx::ShadeOpts().uniform("scalar", scalar)));
+			return lx::Operable(lx::shade(tex, "_out = lxTexture() - scalar;", lx::ShadeOpts().uniform("scalar", scalar)));
 		}
 		lx::Operable operator*(float scalar) {
-			return lx::Operable(lx::shade(tex, "_out = texture() * scalar;", lx::ShadeOpts().uniform("scalar", scalar)));
+			return lx::Operable(lx::shade(tex, "_out = lxTexture() * scalar;", lx::ShadeOpts().uniform("scalar", scalar)));
 		}
 		lx::Operable operator/(float scalar) {
-			return lx::Operable(lx::shade(tex, "_out = texture() / scalar;", lx::ShadeOpts().uniform("scalar", scalar)));
+			return lx::Operable(lx::shade(tex, "_out = lxTexture() / scalar;", lx::ShadeOpts().uniform("scalar", scalar)));
 		}
 		void operator+=(lx::gl::TextureRef other);
 		void operator-=(lx::gl::TextureRef other);
@@ -109,29 +109,29 @@ export namespace lx {
 	}
 
     lx::Operable Operable::operator+(lx::gl::TextureRef other) {
-		return lx::Operable(lx::shade({ tex, other }, "_out = texture() + texture(tex1);"));
+		return lx::Operable(lx::shade({ tex, other }, "_out = lxTexture() + lxTexture(tex1);"));
 	}
 	lx::Operable Operable::operator-(lx::gl::TextureRef other) {
-		return lx::Operable(lx::shade({ tex, other }, "_out = texture() - texture(tex1);"));
+		return lx::Operable(lx::shade({ tex, other }, "_out = lxTexture() - lxTexture(tex1);"));
 	}
 	lx::Operable Operable::operator*(lx::gl::TextureRef other) {
-		return lx::Operable(lx::shade({ tex, other }, "_out = texture() * texture(tex1);"));
+		return lx::Operable(lx::shade({ tex, other }, "_out = lxTexture() * lxTexture(tex1);"));
 	}
 	lx::Operable Operable::operator/(lx::gl::TextureRef other) {
-		return lx::Operable(lx::shade({ tex, other }, "_out = texture() / texture(tex1);"));
+		return lx::Operable(lx::shade({ tex, other }, "_out = lxTexture() / lxTexture(tex1);"));
 	}
 
    void Operable::operator+=(lx::gl::TextureRef other) {
-		tex = lx::shade({ tex, other }, "_out = texture() + texture(tex1);");
+		tex = lx::shade({ tex, other }, "_out = lxTexture() + lxTexture(tex1);");
 	}
 	void Operable::operator-=(lx::gl::TextureRef other) {
-		tex = lx::shade({ tex, other }, "_out = texture() - texture(tex1);");
+		tex = lx::shade({ tex, other }, "_out = lxTexture() - lxTexture(tex1);");
 	}
 	void Operable::operator*=(lx::gl::TextureRef other) {
-		tex = lx::shade({ tex, other }, "_out = texture() * texture(tex1);");
+		tex = lx::shade({ tex, other }, "_out = lxTexture() * lxTexture(tex1);");
 	}
 	void Operable::operator/=(lx::gl::TextureRef other) {
-		tex = lx::shade({ tex, other }, "_out = texture() / texture(tex1);");
+		tex = lx::shade({ tex, other }, "_out = lxTexture() / lxTexture(tex1);");
 	}
 
    Operable::operator lx::gl::TextureRef() {

@@ -1,6 +1,0 @@
-[submodule "src/lxlib"]
-	path = src/lxlib
-	url = https://github.com/logixoul/lxlib
-[submodule "lib/imgui"]
-	path = lib/imgui
-	url = https://github.com/ocornut/imgui.git

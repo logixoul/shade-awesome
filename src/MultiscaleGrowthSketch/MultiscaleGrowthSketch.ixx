@@ -175,8 +175,8 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 	static lx::gl::TextureRef gpuHighpass(lx::gl::TextureRef in, float strength) {
 		auto blurred = gpuBlurClaude::blurWithInvKernel(in);
 		auto highpassed = lx::shade({ in, blurred }, MULTILINE(
-			float f = texture().x;
-       float fBlurred = texture(tex1).x;
+			float f = lxTexture().x;
+       float fBlurred = lxTexture(tex1).x;
 		float highPassed = f - fBlurred * highPassStrength;
 		_out.r = highPassed;
 			), lx::ShadeOpts().uniform("highPassStrength", strength)
@@ -189,7 +189,7 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 
         auto imgTex = lx::uploadTex(imgClamped);
 		auto imgTexCentered = lx::shade(imgTex,
-			"float f = texture().x;"
+			"float f = lxTexture().x;"
 			"_out.r = f - .5;"
 		);
 
@@ -203,7 +203,7 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 			auto& thisLevel = pyramid[i];
            auto thisLevelTex = lx::uploadTex(thisLevel);
 			auto thisLevelTexContrastized = lx::shade(thisLevelTex,
-				"float f = texture().x;"
+				"float f = lxTexture().x;"
 				"float fw = fwidth(f);"
 				"f = smoothstep(-fw/2.0, fw/2.0, f);"
 				"_out.r = f;", lx::ShadeOpts().dstRectSize(ivec2(wsx, wsy)));
@@ -212,7 +212,7 @@ export struct MultiscaleGrowthSketch : public lx::SketchBase {
 		stateTex = lx::op(stateTex) / float(pyramid.size());
 		stateTex = (lx::op(stateTex) + lx::op(lx::gpuBlur::run(stateTex, 3)) * 2.0f) / 2;
 		stateTex = lx::shade(stateTex, MULTILINE(
-			float val = texture().x;
+			float val = lxTexture().x;
 		vec3 fire = vec3(min(val * 1.5, 1.), pow(val, 2.5), pow(val, 12.));
 		_out.rgb = fire;
 			),

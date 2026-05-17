@@ -153,11 +153,11 @@ std::string getCompleteFshader(vector<lx::gl::TextureRef> const& texv, vector<lx
 		<< uniformDeclarations.str()
         << "in vec2 texCoord;"
 		<< "out vec4 _out;"
-		<< "vec4 texture(sampler2D tex_) {"
+		<< "vec4 lxTexture(sampler2D tex_) {"
 		<< "	return texture(tex_, texCoord);"
 		<< "}"
-		<< "vec4 texture() {"
-       << "	return texture(tex0, texCoord);"
+		<< "vec4 lxTexture() {"
+	       << "	return texture(tex0, texCoord);"
 		<< "}"
 		<< functions
 		<< "void main() {"
@@ -199,11 +199,16 @@ lx::gl::TextureRef lx::shade(vector<lx::gl::TextureRef> const& texv, std::string
           shader = std::make_shared<lx::GlslProg>(completeFshader, completeVshader);
 			shaders[fshader] = shader;
 		} catch(std::runtime_error const& e) {
-			cout << "GlslProgCompileExc: " << e.what() << endl;
-			cout << "source:" << endl;
-			cout << completeFshader << endl;
-			string s; cin >> s;
-			throw;
+			cerr << "GlslProgCompileExc: " << e.what() << endl;
+			cerr << "Fragment shader source:" << endl;
+			cerr << completeFshader << endl;
+			cerr << "Vertex shader source:" << endl;
+			cerr << completeVshader << endl;
+			throw std::runtime_error(
+				string("GlslProgCompileExc: ") + e.what() +
+				"\nFragment shader source:\n" + completeFshader +
+				"\nVertex shader source:\n" + completeVshader
+			);
 		}
 	} else {
 		shader = shaders[fshader];

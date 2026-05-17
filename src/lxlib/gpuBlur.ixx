@@ -28,7 +28,7 @@ export namespace lx {
 	}
 
       lx::gl::TextureRef run(lx::gl::TextureRef src, int lvls) {
-			auto state = lx::shade(src, "_out = texture();");
+			auto state = lx::shade(src, "_out = lxTexture();");
 
 		for (int i = 0; i < lvls; i++) {
 			state = singleblur(state, .5, .5);
@@ -56,7 +56,7 @@ export namespace lx {
           vector<lx::gl::TextureRef> zoomstates;
 		zoomstates.push_back(src);
             zoomstates[0] = lx::shade(zoomstates[0],
-			"_out = texture().xyz * _mul;",
+			"_out = lxTexture().xyz * _mul;",
               lx::ShadeOpts().uniform("_mul", 1.0f / sumw));
 		for (int i = 0; i < lvls; i++) {
               auto newZoomstate = lx::gpuBlur::singleblur(zoomstates[i], hscale, vscale);
@@ -66,9 +66,9 @@ export namespace lx {
 		for (int i = lvls - 1; i > 0; i--) {
                auto upscaled = lx::gpuBlur::upscale(zoomstates[i], zoomstates[i - 1]->getSize());
 			float w = pow(lvlmul, float(i)); // tmp copypaste
-          zoomstates[i - 1] = lx::shade({ zoomstates[i - 1], upscaled },
-              "vec4 acc = texture(tex0);"
-				"vec4 nextzoom = texture(tex1);"
+		  zoomstates[i - 1] = lx::shade({ zoomstates[i - 1], upscaled },
+			  "vec4 acc = lxTexture(tex0);"
+				"vec4 nextzoom = lxTexture(tex1);"
 				"vec4 c = acc + nextzoom * _mul;"
 				"_out = c;"
                 , lx::ShadeOpts().uniform("_mul", w)

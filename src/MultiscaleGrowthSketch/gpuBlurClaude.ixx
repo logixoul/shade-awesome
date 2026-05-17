@@ -124,13 +124,13 @@ namespace gpuBlurClaude {
 		ivec2 dstSize = ivec2(src->getWidth(), src->getHeight());
 
       auto result = lx::shade(levels[0],
-			"_out.rgb = texture().xyz * _w;",
+			"_out.rgb = lxTexture().xyz * _w;",
             lx::ShadeOpts().uniform("_w", weight).dstRectSize(dstSize));
 
 		for (int i = 1; i < numLevels; i++) {
            auto upscaled = lx::gpuBlur::upscale(levels[i], dstSize);
 			result = lx::shade({ result, upscaled },
-               "_out = texture() + texture(tex1) * _w;",
+			"_out = lxTexture() + lxTexture(tex1) * _w;",
              lx::ShadeOpts().uniform("_w", weight));
 		}
 

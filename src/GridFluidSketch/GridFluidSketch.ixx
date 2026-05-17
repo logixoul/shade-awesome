@@ -151,7 +151,7 @@ export struct GridFluidSketch : public lx::SketchBase {
 		sumTex = gauss3texScaled(sumTex, 1.0); // reduce upscale artefacts
 		sumTex = gauss3texScaled(sumTex, 1.0); // reduce upscale artefacts
       sumTex = lx::shade(sumTex,
-			"float f = texture().x;"
+			"float f = lxTexture().x;"
 			"float fw = fwidth(f);"
 			"_out.r = f * smoothstep(matterThreshold-fw/2, matterThreshold+fw/2, f);"
           , lx::ShadeOpts().uniform("matterThreshold", matterThreshold).scale(scale)
@@ -162,7 +162,7 @@ export struct GridFluidSketch : public lx::SketchBase {
 
      auto momentumTex = lx::uploadTex(red.momentum);
      auto hsvTex = lx::shade(momentumTex, MULTILINE(
-			vec2 momentum = texture().xy;
+			vec2 momentum = lxTexture().xy;
          float angle = atan(momentum.y, momentum.x) / (2 * lx::pi) + .5;
 			//angle *= pi;
 			float len = length(momentum);
@@ -187,14 +187,14 @@ export struct GridFluidSketch : public lx::SketchBase {
      greenTex = lx::op(greenTex) * 0.16;
 
       hsvTex = lx::shade({ hsvTex, hsvTexB }, MULTILINE(
-          _out = (texture() + texture(tex1) * 1.0) * bloomIntensity;
+		  _out = (lxTexture() + lxTexture(tex1) * 1.0) * bloomIntensity;
 		),
            lx::ShadeOpts().uniform("bloomIntensity", bloomIntensity)
 		);
       static const auto format = lx::gl::Texture::Format().mipmap(true).minFilter(GL_LINEAR_MIPMAP_LINEAR).magFilter(GL_LINEAR).loadTopDown(true).wrap(GL_MIRRORED_REPEAT).internalFormat(GL_RGBA8);
 		static auto envMap = lx::gl::Texture::create("milkyway.png", format);
 		static auto envMap2 = lx::shade(envMap, MULTILINE(
-			vec3 c = texture().xyz;
+			vec3 c = lxTexture().xyz;
 		c /= vec3(1.0) - c * 0.99;
 		_out.rgb = c;
 			),
@@ -227,8 +227,8 @@ export struct GridFluidSketch : public lx::SketchBase {
      auto tex2 = lx::shade({ sumTex, grads, envMap2, redTex, greenTex, hsvTex },
 
 
-         "vec3 hsv = texture(tex5).xyz;"
-			"vec2 d = texture(tex1).xy;"
+			"vec3 hsv = lxTexture(tex5).xyz;"
+			"vec2 d = lxTexture(tex1).xy;"
 
 			"vec3 normal = normalize(vec3(d.x, d.y, 1.0));"
 			"vec3 viewDir = normalize(vec3(0.0, 0.0, 1.0));"
@@ -245,8 +245,8 @@ export struct GridFluidSketch : public lx::SketchBase {
 			"vec2 dPdx = dFdx(refractUv);"
 			"vec2 dPdy = dFdy(refractUv);"
             "vec3 c = textureGrad(tex2, refractUv, dPdx, dPdy).rgb;"
-			"float redVal = texture(tex3).x;"
-			"float greenVal = texture(tex4).x;"
+			"float redVal = lxTexture(tex3).x;"
+			"float greenVal = lxTexture(tex4).x;"
 			//"redVal = 1.0-exp(-redVal);"
 			//"greenVal = 1.0-exp(-greenVal);"
 			// this is taken from https://www.shadertoy.com/view/Mld3Rn
@@ -278,12 +278,12 @@ export struct GridFluidSketch : public lx::SketchBase {
 			
 		);
 
-       const auto tex2Thres = lx::shade(tex2, "vec3 c=texture().xyz; c *= step(vec3(1.0), c); _out.rgb=c;");
+	const auto tex2Thres = lx::shade(tex2, "vec3 c=lxTexture().xyz; c *= step(vec3(1.0), c); _out.rgb=c;");
 		auto tex2b = lx::gpuBlur::run_longtail(tex2Thres, bloomIters, bloomSize);
 		tex2 = lx::op(tex2) + lx::op(tex2b) * bloomIntensity;
 
       tex2 = lx::shade(tex2,
-            "vec3 c = texture(tex0).xyz;"
+		"vec3 c = lxTexture(tex0).xyz;"
 			"if(c.r<0.0||c.g<0.0||c.b<0.0) { _out.rgb = vec3(1.0, 0.0, 0.0); }" // eases debugging
 			"c /= c + vec3(1.0);"
 			"c = pow(c, vec3(1.0/2.2));"
